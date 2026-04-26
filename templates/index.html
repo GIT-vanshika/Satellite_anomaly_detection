@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Satellite Anomaly Detection</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(26, 26, 46, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #00d4ff, #090979);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #b0b0b0;
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #e0e0e0;
+            font-size: 0.95rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #e0e0e0;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .form-group input::placeholder {
+            color: #888;
+        }
+
+        .predict-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(45deg, #00d4ff, #090979);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .predict-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 212, 255, 0.4);
+        }
+
+        .predict-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #00d4ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result {
+            display: none;
+            margin-top: 30px;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result.normal {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            border: 2px solid #27ae60;
+        }
+
+        .result.anomaly {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            border: 2px solid #e74c3c;
+        }
+
+        .result h3 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        .confidence {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .details {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .metric-name {
+            opacity: 0.9;
+        }
+
+        .metric-value {
+            font-weight: 600;
+        }
+
+        .error {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px;
+                margin: 10px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .form-group input {
+                padding: 12px;
+            }
+
+            .predict-btn {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛰️ Satellite Anomaly Detection</h1>
+        <p class="subtitle">Real-time telemetry analysis using AI</p>
+
+        <form id="telemetryForm">
+            <div class="form-group">
+                <label for="batteryTemp">🔋 Battery Temperature (°C)</label>
+                <input type="number" id="batteryTemp" name="BatteryTemperature" step="0.01" placeholder="e.g., 3.8" required>
+            </div>
+
+            <div class="form-group">
+                <label for="busVoltage">⚡ Bus Voltage (V)</label>
+                <input type="number" id="busVoltage" name="BusVoltage" step="0.01" placeholder="e.g., 32.0" required>
+            </div>
+
+            <div class="form-group">
+                <label for="totalCurrent">🔌 Total Bus Current (A)</label>
+                <input type="number" id="totalCurrent" name="TotalBusCurrent" step="0.01" placeholder="e.g., 1266.0" required>
+            </div>
+
+            <div class="form-group">
+                <label for="wheelRPM">⚙️ Wheel RPM</label>
+                <input type="number" id="wheelRPM" name="WheelRPM" step="0.01" placeholder="e.g., 1000.0" required>
+            </div>
+
+            <div class="form-group">
+                <label for="wheelTemp">🌡️ Wheel Temperature (°C)</label>
+                <input type="number" id="wheelTemp" name="WheelTemperature" step="0.01" placeholder="e.g., 25.0" required>
+            </div>
+
+            <button type="submit" class="predict-btn" id="predictBtn">
+                🚀 Detect Anomalies
+            </button>
+        </form>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Analyzing telemetry data...</p>
+        </div>
+
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('telemetryForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+            const data = {};
+            for (let [key, value] of formData.entries()) {
+                data[key] = parseFloat(value);
+            }
+
+            // Show loading, hide result
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('predictBtn').disabled = true;
+            document.getElementById('predictBtn').textContent = '🔄 Analyzing...';
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                const result = await response.json();
+
+                // Hide loading
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('predictBtn').disabled = false;
+                document.getElementById('predictBtn').textContent = '🚀 Detect Anomalies';
+
+                if (response.ok) {
+                    displayResult(result);
+                } else {
+                    displayError(result.detail || result.error || 'An error occurred');
+                }
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('predictBtn').disabled = false;
+                document.getElementById('predictBtn').textContent = '🚀 Detect Anomalies';
+                displayError('Failed to connect to server. Please try again.');
+            }
+        });
+
+        function displayResult(result) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+
+            const isAnomaly = result.overall_anomaly;
+            const confidence = Math.max(
+                Math.abs(result.isolation_forest.anomaly_score),
+                result.autoencoder.anomaly_score / 10000
+            ) * 100;
+
+            resultDiv.className = `result ${isAnomaly ? 'anomaly' : 'normal'}`;
+
+            resultDiv.innerHTML = `
+                <h3>${isAnomaly ? '🚨 ANOMALY DETECTED' : '✅ NORMAL OPERATION'}</h3>
+                <div class="confidence">
+                    Confidence: ${confidence.toFixed(1)}%
+                </div>
+                <div class="details">
+                    <div class="metric">
+                        <span class="metric-name">Isolation Forest:</span>
+                        <span class="metric-value">${result.isolation_forest.is_anomaly ? 'Anomaly' : 'Normal'}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-name">Autoencoder:</span>
+                        <span class="metric-value">${result.autoencoder.is_anomaly ? 'Anomaly' : 'Normal'}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-name">IF Score:</span>
+                        <span class="metric-value">${result.isolation_forest.anomaly_score.toFixed(4)}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-name">AE Error:</span>
+                        <span class="metric-value">${result.autoencoder.anomaly_score.toFixed(2)}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function displayError(message) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'error';
+            resultDiv.innerHTML = `<h3>❌ Error</h3><p>${message}</p>`;
+        }
+    </script>
+</body>
+</html>

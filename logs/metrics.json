@@ -1,0 +1,9 @@
+{
+  "rows_total": 300000,
+  "features": 5,
+  "train_rows": 240000,
+  "validation_rows": 60000,
+  "isolation_forest_false_positive_rate": 0.0094,
+  "autoencoder_false_positive_rate": 0.004716666666666667,
+  "autoencoder_threshold": 0.0012071321197565238
+}
